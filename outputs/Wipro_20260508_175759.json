@@ -1,0 +1,32 @@
+```json
+{
+  "stock": "Wipro",
+  "resolved_ticker": "WIPRO.NS",
+  "market": "NSE",
+  "near_term_view": "Bearish sentiment due to weak earnings forecasts and declining growth, with potential for further price declines if key support levels are breached.",
+  "confidence": "Moderate",
+  "technical_view": "The stock is in a bearish trend with a current price of ₹197.91, below both the 20-day and 50-day SMAs. RSI at 39.76 indicates potential oversold conditions, but caution is advised as the trend remains negative.",
+  "fundamental_view": "Wipro demonstrates solid fundamentals with strong liquidity and profitability metrics, but faces challenges with declining earnings growth and a high payout ratio, which may limit reinvestment in growth.",
+  "news_sentiment_view": "Bearish sentiment predominates due to weak Q1 2027 forecasts and revenue degrowth, despite some positive catalysts like strategic partnerships and share buybacks.",
+  "risk_level": "High",
+  "key_growth_drivers": [
+    "Strategic partnerships for innovation in AI and digital solutions",
+    "Share buyback program indicating management's confidence"
+  ],
+  "key_risks": [
+    "Weak demand from key sectors like banking and finance",
+    "Potential economic slowdown impacting client spending",
+    "High payout ratio limiting growth reinvestment"
+  ],
+  "data_limitations": [],
+  "final_reasoning": "While Wipro has strong liquidity and profitability, the current bearish trend, declining earnings growth, and negative sentiment suggest caution. Investors should monitor macroeconomic conditions and sector trends closely.",
+  "suggested_action": "Cautious approach recommended; consider holding or reducing exposure until clearer signs of recovery emerge.",
+  "further_research": [
+    "Monitor earnings growth and forecasts closely",
+    "Evaluate the impact of macroeconomic conditions on client spending",
+    "Assess the effectiveness of strategic initiatives and partnerships"
+  ],
+  "disclaimer": "This assessment is based on available data and does not constitute financial advice. No guaranteed predictions are made.",
+  "failed_tasks": []
+}
+```

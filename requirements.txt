@@ -1,0 +1,8 @@
+crewai
+langchain-openai
+pydantic
+python-dotenv
+numpy
+pandas
+yfinance
+truststore

@@ -1,0 +1,35 @@
+```json
+{
+  "stock": "Mangalore Refinery and Petrochemicals Limited",
+  "resolved_ticker": "MRPL.NS",
+  "market": "NSE",
+  "near_term_view": "Bearish momentum with oversold conditions and strong selling pressure.",
+  "confidence": "Low confidence in a bullish reversal due to bearish indicators.",
+  "technical_view": "Current price is ₹167.94, below both the 20-day SMA of ₹172.50 and the 50-day SMA of ₹182.38, indicating a bearish trend. RSI at 39.42 suggests oversold conditions.",
+  "fundamental_view": "Mixed financial picture with strengths in market position and profitability metrics but weaknesses in growth and high debt levels. Revenue growth is negative at -3.4% YoY, and earnings growth is significantly down at -68.2% YoY.",
+  "news_sentiment_view": "Mixed to negative sentiment with strategic opportunities in Venezuelan oil purchases but significant risks from geopolitical tensions and operational shifts away from Russian oil.",
+  "risk_level": "High due to significant debt levels, bearish technical indicators, and macroeconomic uncertainties.",
+  "key_growth_drivers": [
+    "Exploration of Venezuelan oil purchases to diversify supply sources.",
+    "Potential for EBITDA growth and strategic expansion plans."
+  ],
+  "key_risks": [
+    "High debt levels (Debt to Equity ratio of 108.06%).",
+    "Negative revenue and earnings growth trends.",
+    "Geopolitical tensions affecting oil supply and pricing."
+  ],
+  "data_limitations": [
+    "Assumed number of shares outstanding for calculations.",
+    "Moderate confidence in Book Value Per Share approximation due to potential fluctuations."
+  ],
+  "final_reasoning": "MRPL presents a mixed investment profile with significant risks, particularly related to debt levels, valuation, and technical indicators. Investors should exercise caution and closely monitor macroeconomic and sector developments that could impact the company's performance.",
+  "suggested_action": "Caution advised; consider monitoring for potential stabilization before making investment decisions.",
+  "further_research": [
+    "Monitor geopolitical developments affecting oil supply.",
+    "Assess the impact of macroeconomic conditions on demand for petroleum products.",
+    "Evaluate the company's ability to manage debt and improve cash flow."
+  ],
+  "disclaimer": "This assessment does not constitute financial advice and is based on available data as of October 2023. No guaranteed predictions are made.",
+  "failed_tasks": []
+}
+```

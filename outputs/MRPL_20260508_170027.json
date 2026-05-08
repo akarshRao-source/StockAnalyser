@@ -1,0 +1,34 @@
+```json
+{
+  "stock": "Mangalore Refinery and Petrochemicals Limited",
+  "resolved_ticker": "MRPL.NS",
+  "market": "NSE",
+  "near_term_view": "Bearish sentiment persists with potential for short-term rebounds due to oversold conditions.",
+  "confidence": "High",
+  "technical_view": "The stock is in a bearish trend with significant selling pressure. Current price is below both 20-day and 50-day moving averages, and RSI indicates oversold conditions.",
+  "fundamental_view": "Mixed financial profile with reasonable profitability metrics but significant weaknesses in growth and high debt levels. Negative revenue and earnings growth raise concerns about operational efficiency.",
+  "news_sentiment_view": "Mixed to negative sentiment influenced by regulatory concerns and operational challenges. Strategic shift towards Venezuelan oil may provide some stability, but sourcing challenges remain.",
+  "risk_level": "High",
+  "key_growth_drivers": [
+    "Exploration of Venezuelan oil purchases to diversify supply sources.",
+    "Strategic expansion plans despite operational challenges."
+  ],
+  "key_risks": [
+    "High debt levels (debt to equity ratio of 108.06%) posing financial strain.",
+    "Negative revenue and earnings growth indicating operational challenges.",
+    "Liquidity concerns with a quick ratio of 0.39."
+  ],
+  "data_limitations": [
+    "Specific values for total assets and total equity were not provided directly.",
+    "The number of shares outstanding is not explicitly mentioned."
+  ],
+  "final_reasoning": "Mangalore Refinery and Petrochemicals Limited presents a mixed investment profile with significant risks, particularly related to debt levels, liquidity, and market volatility. The overall bearish trend in the stock, combined with operational challenges and regulatory concerns, suggests caution for potential investors.",
+  "suggested_action": "Caution advised; consider monitoring for potential short-term rebounds but be wary of high debt and operational risks.",
+  "further_research": [
+    "Monitor developments in regulatory changes affecting oil imports.",
+    "Assess the impact of global oil price fluctuations on profitability.",
+    "Evaluate the effectiveness of the strategic shift towards Venezuelan oil."
+  ],
+  "disclaimer": "This assessment does not constitute financial advice and is based on available data as of October 2023. No guaranteed predictions are made regarding future performance."
+}
+```
