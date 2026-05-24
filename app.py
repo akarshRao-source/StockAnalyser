@@ -4,6 +4,7 @@ import queue
 import contextlib
 import json
 import re
+import os
 import yfinance as yf
 import pandas as pd
 import numpy as np
@@ -13,45 +14,80 @@ from main import run_stock_analysis
 
 # =========================================================
 # CONFIGURABLE COLORS / THEME
-# Edit any value below to retheme the entire app instantly.
 # =========================================================
 
-APP_BACKGROUND      = "#0a0a0f"   # Page outermost background
-CARD_BACKGROUND     = "#13131a"   # Report card background
-CARD_BORDER         = "#2a2a3d"   # Report card border
-SECTION_BACKGROUND  = "#1c1c28"   # Inner metric card background
-SECTION_BORDER      = "#2e2e45"   # Inner metric card border
+APP_BACKGROUND      = "#0a0a0f"
+CARD_BACKGROUND     = "#13131a"
+CARD_BORDER         = "#2a2a3d"
+SECTION_BACKGROUND  = "#1c1c28"
+SECTION_BORDER      = "#2e2e45"
 
-TEXT_COLOR          = "#e2e8f0"   # Body text
-SUBTEXT_COLOR       = "#8892a4"   # Muted / secondary text
-HEADING_COLOR       = "#ffffff"   # H1 / H2 headings
+TEXT_COLOR          = "#e2e8f0"
+SUBTEXT_COLOR       = "#8892a4"
+HEADING_COLOR       = "#ffffff"
 
-ACCENT_PRIMARY      = "#6c63ff"   # Purple  – primary accent / button
-ACCENT_SECONDARY    = "#00d2ff"   # Cyan    – secondary accent
-ACCENT_SUCCESS      = "#22c55e"   # Green   – bullish / positive
-ACCENT_WARNING      = "#f59e0b"   # Amber   – caution
-ACCENT_ERROR        = "#ef4444"   # Red     – bearish / error
+ACCENT_PRIMARY      = "#6c63ff"
+ACCENT_SECONDARY    = "#00d2ff"
+ACCENT_SUCCESS      = "#22c55e"
+ACCENT_WARNING      = "#f59e0b"
+ACCENT_ERROR        = "#ef4444"
 
-BUTTON_BG           = "#6c63ff"   # Analyze button background
-BUTTON_TEXT         = "#ffffff"   # Analyze button label
+BUTTON_BG           = "#6c63ff"
+BUTTON_TEXT         = "#ffffff"
 
-INPUT_BG            = "#13131a"   # Textbox background
-INPUT_BORDER        = "#2a2a3d"   # Textbox border
-INPUT_FOCUS_BORDER  = "#6c63ff"   # Textbox focus ring
-INPUT_TEXT          = "#e2e8f0"   # Textbox text
-INPUT_PLACEHOLDER   = "#4a5568"   # Placeholder text
+INPUT_BG            = "#13131a"
+INPUT_BORDER        = "#2a2a3d"
+INPUT_FOCUS_BORDER  = "#6c63ff"
+INPUT_TEXT          = "#e2e8f0"
+INPUT_PLACEHOLDER   = "#4a5568"
 
-LOG_BACKGROUND      = "#050510"   # Terminal log background
-LOG_TEXT_COLOR      = "#a8ff78"   # Terminal log text  ← keep monospace/green
-LOG_BORDER          = "#1e3a1e"   # Terminal border
+LOG_BACKGROUND      = "#050510"
+LOG_TEXT_COLOR      = "#a8ff78"
+LOG_BORDER          = "#1e3a1e"
 
-BADGE_BG            = "#1e1e2e"   # Pill / badge background
-DIVIDER_COLOR       = "#1e1e2e"   # <hr> divider
+BADGE_BG            = "#1e1e2e"
+DIVIDER_COLOR       = "#1e1e2e"
 
 DISPLAY_FONT  = "'Inter', 'Segoe UI', Arial, sans-serif"
 TERMINAL_FONT = "'Cascadia Code', 'Fira Code', 'Consolas', 'Courier New', monospace"
+
 Name = ""
-period = "1Y"
+
+# =========================================================
+# RECENT SEARCHES
+# =========================================================
+
+RECENT_SEARCHES_FILE = "recent_searches.json"
+DEFAULT_QUICK_PICKS  = ["RELIANCE", "TCS", "INFY", "HDFCBANK", "ONGC", "WIPRO"]
+
+def load_recent_searches():
+    try:
+        if os.path.exists(RECENT_SEARCHES_FILE):
+            with open(RECENT_SEARCHES_FILE, "r") as f:
+                data = json.load(f)
+                searches = data.get("recent_searches", [])
+                # Pad with defaults if fewer than 6
+                combined = searches + [s for s in DEFAULT_QUICK_PICKS if s not in searches]
+                return combined[:6]
+    except Exception:
+        pass
+    return DEFAULT_QUICK_PICKS[:]
+
+def save_recent_search(symbol: str):
+    """Save a validated symbol to the recent searches list (max 6, most recent first)."""
+    try:
+        current = load_recent_searches()
+        symbol = symbol.upper()
+        # Remove if already present, then prepend
+        current = [s for s in current if s.upper() != symbol]
+        current.insert(0, symbol)
+        current = current[:6]
+        with open(RECENT_SEARCHES_FILE, "w") as f:
+            json.dump({"recent_searches": current}, f, indent=2)
+        return current
+    except Exception:
+        return load_recent_searches()
+
 # =========================================================
 # GLOBAL QUEUE
 # =========================================================
@@ -75,6 +111,7 @@ def validate_stock(stock_name):
                 return {"valid": True, "symbol": symbol,
                         "company": result.get("shortname", stock_name)}
         first = search.quotes[0]
+        Name = first.get("symbol", "")
         return {"valid": True, "symbol": first.get("symbol"),
                 "company": first.get("shortname", stock_name)}
     except Exception as e:
@@ -98,14 +135,12 @@ PERIOD_CONFIG = {
 }
 
 def fetch_and_plot(stock_name: str, tab_label: str):
-    """Fetch OHLC data for *stock_name* and return a Plotly Figure."""
     if not stock_name or not stock_name.strip():
         return go.Figure()
 
     cfg = PERIOD_CONFIG.get(tab_label, PERIOD_CONFIG["6M"])
 
     try:
-
         ticker = yf.Ticker(Name)
         df = ticker.history(period=cfg["period"], interval=cfg["interval"])
         if df.empty:
@@ -117,7 +152,6 @@ def fetch_and_plot(stock_name: str, tab_label: str):
         df.columns = ["Date", "Price"]
         df["Date"] = pd.to_datetime(df["Date"], utc=True).dt.tz_localize(None)
 
-        # Evenly-spaced tick positions
         n_ticks = min(cfg["x_ticks"], len(df))
         tick_indices = np.linspace(0, len(df) - 1, n_ticks, dtype=int)
         tick_vals = df["Date"].iloc[tick_indices].tolist()
@@ -131,7 +165,7 @@ def fetch_and_plot(stock_name: str, tab_label: str):
             name="Price",
             line=dict(color=ACCENT_PRIMARY, width=2),
             fill="tozeroy",
-            fillcolor=f"rgba(108,99,255,0.08)",
+            fillcolor="rgba(108,99,255,0.08)",
             hovertemplate="%{x|%d %b %Y}<br>₹%{y:,.2f}<extra></extra>",
         ))
 
@@ -219,8 +253,6 @@ def create_beautiful_report(data):
             <p style="color:{SUBTEXT_COLOR};margin:0;font-size:15px;">{data['error']}</p>
         </div>"""
 
-    # ── helpers ──────────────────────────────────────────────────────────────
-
     def list_items(key, icon, color):
         items = data.get(key, [])
         if not items:
@@ -262,7 +294,6 @@ def create_beautiful_report(data):
                        font-size:14px;line-height:1.8;">{items_html}</ul>
         </div>"""
 
-    # ── action pill ──────────────────────────────────────────────────────────
     action = data.get("suggested_action", "N/A").upper()
     action_color = (ACCENT_SUCCESS if "BUY" in action
                     else ACCENT_ERROR if "SELL" in action
@@ -299,7 +330,7 @@ def create_beautiful_report(data):
             </div>
             {action_pill}
         </div>
-        
+
         <!-- KPI ROW -->
         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:32px;">
             {kpi_card("Confidence",      data.get("confidence","N/A"),       ACCENT_PRIMARY)}
@@ -309,7 +340,6 @@ def create_beautiful_report(data):
 
         <hr style="border:none;border-top:1px solid {DIVIDER_COLOR};margin:0 0 28px 0;">
 
-        <!-- ANALYSIS SECTIONS -->
         {section("Technical View",   data.get("technical_view",""),      "📊", ACCENT_SECONDARY)}
         {section("Fundamental View", data.get("fundamental_view",""),    "🏦", ACCENT_PRIMARY)}
         {section("News Sentiment",   data.get("news_sentiment_view",""), "📰", ACCENT_WARNING)}
@@ -317,15 +347,13 @@ def create_beautiful_report(data):
 
         <hr style="border:none;border-top:1px solid {DIVIDER_COLOR};margin:0 0 28px 0;">
 
-        <!-- LIST CARDS -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
                     gap:20px;margin-bottom:28px;">
-            {list_card("Growth Drivers", list_items("key_growth_drivers","↑",ACCENT_SUCCESS), ACCENT_SUCCESS)}
-            {list_card("Key Risks",      list_items("key_risks","↓",ACCENT_ERROR),            ACCENT_ERROR)}
+            {list_card("Growth Drivers",  list_items("key_growth_drivers","↑",ACCENT_SUCCESS), ACCENT_SUCCESS)}
+            {list_card("Key Risks",       list_items("key_risks","↓",ACCENT_ERROR),            ACCENT_ERROR)}
             {list_card("Further Research",list_items("further_research","→",ACCENT_WARNING),   ACCENT_WARNING)}
         </div>
 
-        <!-- DISCLAIMER -->
         <div style="background:{BADGE_BG};border:1px solid {DIVIDER_COLOR};
                     border-left:4px solid {ACCENT_WARNING};border-radius:12px;
                     padding:18px 22px;font-size:13px;color:{SUBTEXT_COLOR};line-height:1.7;">
@@ -344,8 +372,16 @@ def analyze(stock_name):
 
     validation = validate_stock(stock_name)
     if not validation["valid"]:
-        yield create_beautiful_report({"error": validation["error"]}), "Validation failed.", None
+        yield (
+            create_beautiful_report({"error": validation["error"]}),
+            "Validation failed.",
+            None,
+            *[gr.update()] * 6,   # 6 chip updates – no change on failure
+        )
         return
+
+    # Save to recent searches and get updated list
+    updated_searches = save_recent_search(validation["symbol"])
 
     logs = (
         f"[INFO]  Stock   : {validation['company']} ({validation['symbol']})\n"
@@ -353,7 +389,10 @@ def analyze(stock_name):
         f"[INFO]  Engine  : Starting multi-agent analysis...\n"
         f"{'─'*60}\n"
     )
-    yield None, logs, None
+
+    # Yield initial log + updated chip labels
+    chip_updates = [gr.update(value=s) for s in updated_searches]
+    yield None, logs, None, *chip_updates
 
     def worker():
         try:
@@ -374,12 +413,12 @@ def analyze(stock_name):
         item_type, data = q.get()
         if item_type == "log":
             logs += data
-            yield None, logs, None
+            yield None, logs, None, *[gr.update()] * 6
         elif item_type == "json":
             final_data = data
             if isinstance(data, dict) and "raw_result" in data:
                 final_data = extract_json_from_raw(data["raw_result"])
-            yield create_beautiful_report(final_data), logs, final_data
+            yield create_beautiful_report(final_data), logs, final_data, *[gr.update()] * 6
             break
 
 # =========================================================
@@ -394,7 +433,6 @@ body, .gradio-container {{
     font-family:{DISPLAY_FONT};
 }}
 
-/* ── All inputs except the log box ── */
 input, .gr-textbox:not(#logs-box) textarea {{
     background:{INPUT_BG} !important;
     color:{INPUT_TEXT} !important;
@@ -413,7 +451,6 @@ input::placeholder, textarea::placeholder {{
     color:{INPUT_PLACEHOLDER} !important;
 }}
 
-/* ── Terminal log box (font/color locked) ── */
 #logs-box textarea {{
     font-family:{TERMINAL_FONT} !important;
     font-size:13px !important;
@@ -425,7 +462,6 @@ input::placeholder, textarea::placeholder {{
     padding:16px !important;
 }}
 
-/* ── Primary / Analyze button ── */
 .analyze-btn button, button.primary {{
     background:linear-gradient(135deg, {BUTTON_BG}, {ACCENT_SECONDARY}) !important;
     color:{BUTTON_TEXT} !important;
@@ -445,7 +481,6 @@ input::placeholder, textarea::placeholder {{
     transform:translateY(-1px) !important;
 }}
 
-/* ── Labels ── */
 label span {{
     color:{SUBTEXT_COLOR} !important;
     font-size:12px !important;
@@ -454,7 +489,6 @@ label span {{
     text-transform:uppercase !important;
 }}
 
-/* ── Markdown header ── */
 .gr-markdown h1 {{
     color:{HEADING_COLOR} !important;
     font-size:26px !important;
@@ -466,7 +500,6 @@ label span {{
     font-size:14px !important;
 }}
 
-/* ── Custom scrollbar ── */
 ::-webkit-scrollbar {{ width:6px; height:6px; }}
 ::-webkit-scrollbar-track {{ background:{APP_BACKGROUND}; }}
 ::-webkit-scrollbar-thumb {{ background:{INPUT_BORDER}; border-radius:3px; }}
@@ -508,42 +541,37 @@ with gr.Blocks(
             elem_classes=["analyze-btn"],
         )
 
-    # ── Quick-pick chips ─────────────────────────────────────────────────────
+    # ── Quick-pick chips (populated from recent searches) ────────────────────
     gr.Markdown("<small style='color:#2d3748;'>⚡ Quick picks</small>")
+    initial_picks = load_recent_searches()
+    chip_buttons = []
     with gr.Row():
-        for ticker in ["RELIANCE", "TCS", "INFY", "HDFCBANK", "ONGC", "WIPRO"]:
+        for ticker in initial_picks:
             chip = gr.Button(ticker, size="sm", variant="secondary")
             chip.click(fn=lambda t=ticker: t, outputs=stock_input)
+            chip_buttons.append(chip)
 
-
-    # Wire up each tab's plot to refresh when Analyze runs
-    # (also triggered per-tab via tab select below)
-
-    # ── Output tabs ──────────────────────────────────────────────────────────
+    # ── Single top-level Tabs block ───────────────────────────────────────────
+    # FIX: All tab items (chart periods + report/logs/json) live inside ONE
+    # gr.Tabs() context so Gradio renders a single tab bar, not two.
     with gr.Tabs():
 
-        # ── Stock Price Chart ─────────────────────────────────────────────────────
-        gr.Markdown(
-            f"<h3 style='color:{HEADING_COLOR};font-family:{DISPLAY_FONT};"
-            f"font-size:16px;font-weight:700;margin:24px 0 4px 0;'>📉 Price Chart</h3>"
-        )
+        # ── Price Chart tab ───────────────────────────────────────────────────
+        with gr.TabItem("📉  Price Chart"):
+            with gr.Tabs() as chart_tabs:
+                chart_periods = ["1W", "1M", "3M", "6M", "9M", "1Y", "3Y", "5Y", "10Y", "All"]
+                chart_plots = {}
+                tab_items   = {}
 
-        with gr.Tabs() as chart_tabs:
-            chart_plot = None
-            chart_periods = ["1W", "1M", "3M", "6M", "9M", "1Y", "3Y", "5Y", "10Y", "All"]
-            chart_plots = {}
+                for period in chart_periods:
+                    with gr.TabItem(period) as tab:
+                        tab_items[period] = tab
+                        chart_plots[period] = gr.Plot(
+                            label=f"Stock Price – {period}",
+                            value=go.Figure(),
+                        )
 
-            tab_items = {}
-
-            for period in chart_periods:
-                with gr.TabItem(period) as tab:
-                    tab_items[period] = tab
-
-                    chart_plots[period] = gr.Plot(
-                        label=f"Stock Price – {period}",
-                        value=go.Figure()  # EMPTY INITIAL FIGURE
-                    )
-
+        # ── Report tab ───────────────────────────────────────────────────────
         with gr.TabItem("📄  Report"):
             report_output = gr.HTML(
                 value=(
@@ -555,16 +583,17 @@ with gr.Blocks(
                 )
             )
 
+        # ── Live Logs tab ────────────────────────────────────────────────────
         with gr.TabItem("🖥️  Live Logs"):
             logs_output = gr.Textbox(
                 label="Agent Activity Log",
                 lines=28,
                 max_lines=28,
                 autoscroll=True,
-                # show_copy_button=True,
                 elem_id="logs-box",
             )
 
+        # ── Raw JSON tab ─────────────────────────────────────────────────────
         with gr.TabItem("{ }  Raw JSON"):
             json_output = gr.JSON(label="Structured Output")
 
@@ -576,21 +605,19 @@ with gr.Blocks(
 
     # ── Wire-up ──────────────────────────────────────────────────────────────
 
-    # When Analyze runs, populate the default chart period (6M) first.
-    # Each chart tab also re-fetches its own period when clicked.
-
-    def make_chart_updater(period):
+    def make_chart_updater(p):
         def _update(stock_name):
-            return fetch_and_plot(stock_name, period)
+            return fetch_and_plot(stock_name, p)
         return _update
 
+    # Analyze button: update report/logs/json + refresh quick-pick chip labels
     analyze_btn.click(
         fn=analyze,
         inputs=stock_input,
-        outputs=[report_output, logs_output, json_output],
+        outputs=[report_output, logs_output, json_output] + chip_buttons,
     )
 
-    # Populate all chart tabs when Analyze is clicked
+    # Each chart tab re-fetches its period when selected
     for period, plot_component in chart_plots.items():
         tab_items[period].select(
             fn=make_chart_updater(period),
@@ -598,13 +625,9 @@ with gr.Blocks(
             outputs=plot_component,
         )
 
-    # Also allow quick-pick chips to trigger chart refresh (optional convenience)
-    # Tab select re-fetch: clicking a tab re-draws that period's chart
-    for period, plot_component in chart_plots.items():
-        tab_items[period].select(
-            fn=make_chart_updater(period),
-            inputs=stock_input,
-            outputs=plot_component,
-        )
+    # Quick-pick chips also set their own label back into the input
+    # (re-wired here so the lambda captures the *current* button value dynamically)
+    for chip in chip_buttons:
+        chip.click(fn=lambda t=chip: t.value, outputs=stock_input)
 
-demo.launch(share=True)
+demo.launch()
